@@ -11,8 +11,16 @@ config_version=5
 [application]
 
 config/name="Untitled_Milsim_Game"
-config/features=PackedStringArray("4.6", "Forward Plus")
+run/main_scene="res://Scenes/Game.tscn"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 config/icon="res://icon.svg"
+config/run/main_scene="res://Scenes/Game.tscn"
+
+[autoload]
+
+GameManager="*res://Autoloads/GameManager.cs"
+PlayerManager="*res://Autoloads/PlayerManager.cs"
+NetworkManager="*res://Autoloads/NetworkManager.cs"
 
 [dotnet]
 
