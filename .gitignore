@@ -1,0 +1,17 @@
+# Godot 4+ auto-generated
+.godot/
+/android/
+.mono/
+
+# Export artifacts
+export_presets.cfg
+data_*/
+
+# Generated/temp files
+*.tmp
+*.log
+GameDesignDocument_FINAL2.txt
+
+# OS junk
+.DS_Store
+Thumbs.db
