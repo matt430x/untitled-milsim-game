@@ -6,22 +6,34 @@ public partial class SelectionComponent : Node2D, ISelectable
     [Signal] public delegate void DeselectedEventHandler();
 
     [Export] public int OwnerId { get; set; }
-    [Export] private Node2D _selectionIndicator;
 
     public bool IsSelected { get; private set; }
 
-    public override void _Ready()
+    // Isometric ground ellipse — matches 2:1 tile ratio
+    private static readonly Color RingColor = new(0.2f, 0.9f, 0.2f);
+    private const float RingRx = 28f;
+    private const float RingRy = 12f;
+    private const float RingOffsetY = 6f;
+    private const int   RingSegments = 32;
+
+    public override void _Ready() => Visible = false;
+
+    public override void _Draw()
     {
-        if (_selectionIndicator != null)
-            _selectionIndicator.Visible = false;
+        var pts = new Vector2[RingSegments + 1];
+        for (int i = 0; i <= RingSegments; i++)
+        {
+            float a = i / (float)RingSegments * MathF.PI * 2f;
+            pts[i] = new Vector2(MathF.Cos(a) * RingRx, MathF.Sin(a) * RingRy + RingOffsetY);
+        }
+        DrawPolyline(pts, RingColor, 2f);
     }
 
     public void Select()
     {
         if (IsSelected) return;
         IsSelected = true;
-        if (_selectionIndicator != null)
-            _selectionIndicator.Visible = true;
+        Visible = true;
         EmitSignal(SignalName.Selected);
     }
 
@@ -29,8 +41,7 @@ public partial class SelectionComponent : Node2D, ISelectable
     {
         if (!IsSelected) return;
         IsSelected = false;
-        if (_selectionIndicator != null)
-            _selectionIndicator.Visible = false;
+        Visible = false;
         EmitSignal(SignalName.Deselected);
     }
 }

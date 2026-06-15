@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://World/GameCamera.cs" id="1"]
 [ext_resource type="Script" path="res://World/Baseplate.cs" id="2"]
 [ext_resource type="Script" path="res://Systems/EconomySystem.cs" id="3"]
 [ext_resource type="Script" path="res://Systems/SelectionManager.cs" id="4"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/TestUnit.tscn" id="5_TestUnit"]
 
 [node name="Game" type="Node2D"]
 
@@ -14,6 +15,17 @@ script = ExtResource("1")
 
 [node name="Baseplate" type="Node2D" parent="World"]
 script = ExtResource("2")
+
+[node name="Units" type="Node2D" parent="World"]
+
+[node name="TestUnit1" parent="World/Units" instance=ExtResource("5_TestUnit")]
+position = Vector2(-60, 2545)
+
+[node name="TestUnit2" parent="World/Units" instance=ExtResource("5_TestUnit")]
+position = Vector2(0, 2560)
+
+[node name="TestUnit3" parent="World/Units" instance=ExtResource("5_TestUnit")]
+position = Vector2(60, 2545)
 
 [node name="Systems" type="Node" parent="."]
 

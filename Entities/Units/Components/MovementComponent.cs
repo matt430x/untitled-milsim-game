@@ -2,6 +2,8 @@ namespace MilSim.Entities.Units.Components;
 
 public partial class MovementComponent : Node
 {
+    [Signal] public delegate void ArrivedAtDestinationEventHandler();
+
     [Export] public float MoveSpeed { get; set; } = 100f;
 
     public bool IsMoving { get; private set; }
@@ -19,16 +21,17 @@ public partial class MovementComponent : Node
     {
         if (!IsMoving) return;
 
-        Vector2 direction = (_body.GlobalPosition - Destination);
-        if (direction.Length() <= ArrivalThreshold)
+        Vector2 toDestination = Destination - _body.GlobalPosition;
+        if (toDestination.Length() <= ArrivalThreshold)
         {
             IsMoving = false;
             _body.Velocity = Vector2.Zero;
             _body.MoveAndSlide();
+            EmitSignal(SignalName.ArrivedAtDestination);
             return;
         }
 
-        _body.Velocity = direction.Normalized() * -MoveSpeed;
+        _body.Velocity = toDestination.Normalized() * MoveSpeed;
         _body.MoveAndSlide();
     }
 
