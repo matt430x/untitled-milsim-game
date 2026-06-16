@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Data/UnitData.cs" id="1_unitdata"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/Sniper.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_unitdata")
+UnitName = "Sniper"
+UnitType = 0
+MaxHealth = 65.0
+MoveSpeed = 5.5
+Damage = 35.0
+AttackRange = 12.0
+AttackCooldown = 2.2
+Cost = 120
+TrainingTime = 15.0
+Scene = ExtResource("2_scene")
+DamageVsInfantry = 2.2
+DamageVsVehicle = 0.3
+DamageVsAircraft = 0.2
+DamageVsShip = 0.3
+DamageVsBuilding = 0.5

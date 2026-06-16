@@ -18,6 +18,9 @@ public partial class GameCamera : Camera3D
     private float   _zoom = 1f;
     private Vector3 _focus;
 
+    private bool    _rightHeld;
+    private Vector2 _lastMousePos;
+
     public Vector3 FocusPoint => _focus;
 
     public override void _Ready()
@@ -32,6 +35,7 @@ public partial class GameCamera : Camera3D
     public override void _Process(double delta)
     {
         HandlePan((float)delta);
+        HandleDragPan();
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -48,6 +52,36 @@ public partial class GameCamera : Camera3D
     {
         _focus = new Vector3(point.X, 0f, point.Z);
         ApplyTransform();
+    }
+
+    private void HandleDragPan()
+    {
+        Vector2 mouse = GetViewport().GetMousePosition();
+        bool    held  = Input.IsMouseButtonPressed(MouseButton.Right);
+
+        if (held && _rightHeld)
+        {
+            Vector3? prev = ScreenToGround(_lastMousePos);
+            Vector3? curr = ScreenToGround(mouse);
+            if (prev.HasValue && curr.HasValue)
+            {
+                _focus += prev.Value - curr.Value;
+                ApplyTransform();
+            }
+        }
+
+        _rightHeld    = held;
+        _lastMousePos = mouse;
+    }
+
+    private Vector3? ScreenToGround(Vector2 screenPos)
+    {
+        Vector3 origin = ProjectRayOrigin(screenPos);
+        Vector3 dir    = ProjectRayNormal(screenPos);
+        if (Mathf.Abs(dir.Y) < 0.001f) return null;
+        float t = -origin.Y / dir.Y;
+        if (t < 0f) return null;
+        return origin + dir * t;
     }
 
     private void HandlePan(float delta)

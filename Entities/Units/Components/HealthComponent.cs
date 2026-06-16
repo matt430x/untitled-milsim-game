@@ -21,6 +21,12 @@ public partial class HealthComponent : Node, IDamageable
         CurrentHealth = MaxHealth;
     }
 
+    public void InitHealth()
+    {
+        CurrentHealth = MaxHealth;
+        IsDead = false;
+    }
+
     public void TakeDamage(float amount, int attackerId)
     {
         if (IsDead) return;

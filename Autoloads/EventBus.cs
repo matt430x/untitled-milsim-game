@@ -38,6 +38,9 @@ public static class EventBus
     public static event Action<int, string> OnResearchStarted;   // playerId, researchId
     public static event Action<int, string> OnResearchCompleted; // playerId, researchId
 
+    // --- Combat ---
+    public static event Action<Vector3, Vector3> OnUnitFired; // from, to (world positions)
+
     // --- Selection ---
     public static event Action<List<int>> OnSelectionChanged; // list of selected entity ids
 
@@ -66,6 +69,8 @@ public static class EventBus
 
     public static void RaiseResearchStarted(int playerId, string researchId)           => OnResearchStarted?.Invoke(playerId, researchId);
     public static void RaiseResearchCompleted(int playerId, string researchId)         => OnResearchCompleted?.Invoke(playerId, researchId);
+
+    public static void RaiseUnitFired(Vector3 from, Vector3 to)                        => OnUnitFired?.Invoke(from, to);
 
     public static void RaiseSelectionChanged(List<int> selectedIds)                    => OnSelectionChanged?.Invoke(selectedIds);
 

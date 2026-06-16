@@ -1,0 +1,33 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Entities/Units/BaseUnit.cs" id="1_BaseUnit"]
+[ext_resource type="Script" path="res://Entities/Units/Visual/UnitCubePlaceholder.cs" id="2_Cube"]
+[ext_resource type="Script" path="res://Entities/Units/Components/HealthComponent.cs" id="3_Health"]
+[ext_resource type="Script" path="res://Entities/Units/Components/MovementComponent.cs" id="4_Movement"]
+[ext_resource type="Script" path="res://Entities/Units/Components/SelectionComponent.cs" id="5_Selection"]
+[ext_resource type="Script" path="res://Entities/Units/Components/CombatComponent.cs" id="6_Combat"]
+
+[sub_resource type="BoxShape3D" id="Shape_1"]
+size = Vector3(0.5, 0.8, 0.5)
+
+[node name="Rifleman" type="CharacterBody3D"]
+script = ExtResource("1_BaseUnit")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_1")
+position = Vector3(0, 0.4, 0)
+
+[node name="UnitCubePlaceholder" type="Node3D" parent="."]
+script = ExtResource("2_Cube")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("3_Health")
+
+[node name="MovementComponent" type="Node" parent="."]
+script = ExtResource("4_Movement")
+
+[node name="SelectionComponent" type="Node3D" parent="."]
+script = ExtResource("5_Selection")
+
+[node name="CombatComponent" type="Node" parent="."]
+script = ExtResource("6_Combat")

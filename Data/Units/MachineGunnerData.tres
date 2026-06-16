@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Data/UnitData.cs" id="1_unitdata"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/MachineGunner.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_unitdata")
+UnitName = "Machine Gunner"
+UnitType = 0
+MaxHealth = 110.0
+MoveSpeed = 5.0
+Damage = 6.0
+AttackRange = 5.0
+AttackCooldown = 0.3
+Cost = 90
+TrainingTime = 12.0
+Scene = ExtResource("2_scene")
+DamageVsInfantry = 1.4
+DamageVsVehicle = 0.5
+DamageVsAircraft = 0.5
+DamageVsShip = 0.5
+DamageVsBuilding = 0.7

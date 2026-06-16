@@ -6,6 +6,8 @@ public partial class PlayerManager : Node
 {
     public static PlayerManager Instance { get; private set; }
 
+    public int LocalPlayerId => NetworkManager.Instance?.LocalPlayerId ?? 1;
+
     private readonly Dictionary<int, PlayerContext> _players = new();
 
     public override void _Ready()
@@ -37,6 +39,20 @@ public partial class PlayerManager : Node
         foreach (var p in _players.Values)
             if (!p.IsEliminated && !p.IsDisconnected)
                 yield return p;
+    }
+
+    /// Owners on different teams are hostile. Owners with no registered PlayerContext
+    /// (e.g. prototype scenes with no player bootstrap yet) default to hostile unless
+    /// their OwnerId matches exactly.
+    public bool AreHostile(int ownerIdA, int ownerIdB)
+    {
+        if (ownerIdA == ownerIdB) return false;
+
+        var a = GetPlayer(ownerIdA);
+        var b = GetPlayer(ownerIdB);
+        if (a == null || b == null) return true;
+
+        return a.TeamId != b.TeamId;
     }
 
     public bool TrySpendMoney(int playerId, float amount)

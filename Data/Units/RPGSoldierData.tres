@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Data/UnitData.cs" id="1_unitdata"]
+[ext_resource type="PackedScene" path="res://Scenes/Units/RPGSoldier.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_unitdata")
+UnitName = "RPG Soldier"
+UnitType = 0
+MaxHealth = 90.0
+MoveSpeed = 5.0
+Damage = 25.0
+AttackRange = 7.0
+AttackCooldown = 1.8
+Cost = 100
+TrainingTime = 14.0
+Scene = ExtResource("2_scene")
+DamageVsInfantry = 0.6
+DamageVsVehicle = 2.5
+DamageVsAircraft = 1.2
+DamageVsShip = 1.5
+DamageVsBuilding = 1.6

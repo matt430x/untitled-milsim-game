@@ -19,9 +19,19 @@ public partial class SelectionManager : Control
     private bool    _isBoxSelecting;
     private const float BoxDragThreshold = 8f;
 
+    // Right-click drag guard — suppress move order if mouse moved too far
+    private Vector2 _rightPressPos;
+    private const float RightDragThreshold = 6f;
+
     // Click indicators stored as 3D world positions, projected to screen each frame
     private readonly List<(Vector3 Position, float Timer, bool IsWaypoint)> _clickIndicators = new();
     private const float IndicatorDuration = 0.6f;
+
+    private BaseUnit _hovered;
+
+    // Gunfire tracers (world-space line, fades out quickly)
+    private readonly List<(Vector3 From, Vector3 To, float Timer)> _tracers = new();
+    private const float TracerDuration = 0.12f;
 
     public IReadOnlyList<ISelectable> CurrentSelection => _selected;
 
@@ -29,11 +39,19 @@ public partial class SelectionManager : Control
     {
         SetAnchorsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
+        EventBus.OnUnitFired += HandleUnitFired;
+    }
+
+    public override void _ExitTree()
+    {
+        EventBus.OnUnitFired -= HandleUnitFired;
     }
 
     public override void _Process(double delta)
     {
         TickIndicators((float)delta);
+        TickTracers((float)delta);
+        UpdateHover();
         QueueRedraw();
     }
 
@@ -55,9 +73,12 @@ public partial class SelectionManager : Control
 
     public override void _Draw()
     {
+        DrawHealthBars();
         DrawUnitRoutes();
         DrawSelectionBox();
         DrawClickIndicators();
+        DrawHoverRange();
+        DrawTracers();
     }
 
     // -------------------------------------------------------------------------
@@ -90,9 +111,12 @@ public partial class SelectionManager : Control
                     HandleSingleClick(screenPos, shift);
             }
         }
-        else if (mouse.ButtonIndex == MouseButton.Right && mouse.Pressed)
+        else if (mouse.ButtonIndex == MouseButton.Right)
         {
-            HandleRightClick(screenPos, ctrl);
+            if (mouse.Pressed)
+                _rightPressPos = screenPos;
+            else if (screenPos.DistanceTo(_rightPressPos) < RightDragThreshold)
+                HandleRightClick(screenPos, ctrl);
         }
     }
 
@@ -122,6 +146,7 @@ public partial class SelectionManager : Control
 
         foreach (var selectable in SelectionRegistry.All)
         {
+            if (!IsFriendly(selectable)) continue;
             if (selectable is not Node3D node) continue;
             if (IsBehindCamera(cam,node.GlobalPosition)) continue;
             if (screenBox.HasPoint(cam.UnprojectPosition(node.GlobalPosition)))
@@ -160,6 +185,7 @@ public partial class SelectionManager : Control
         ClearSelection();
         foreach (var selectable in SelectionRegistry.All)
         {
+            if (!IsFriendly(selectable)) continue;
             if (selectable is not Node3D node) continue;
             if (IsBehindCamera(cam,node.GlobalPosition)) continue;
             if (screen.HasPoint(cam.UnprojectPosition(node.GlobalPosition)))
@@ -232,6 +258,70 @@ public partial class SelectionManager : Control
         }
     }
 
+    private void DrawHoverRange()
+    {
+        if (_hovered == null || _hovered.AttackRange <= 0f) return;
+
+        var cam = GetViewport().GetCamera3D();
+        if (cam == null) return;
+        if (IsBehindCamera(cam, _hovered.GlobalPosition)) return;
+
+        const int Segments = 48;
+        var pts = new Vector2[Segments + 1];
+        for (int i = 0; i <= Segments; i++)
+        {
+            float angle = i / (float)Segments * MathF.PI * 2f;
+            Vector3 worldPt = _hovered.GlobalPosition + new Vector3(
+                MathF.Cos(angle) * _hovered.AttackRange, 0f, MathF.Sin(angle) * _hovered.AttackRange);
+            if (IsBehindCamera(cam, worldPt)) return;
+            pts[i] = cam.UnprojectPosition(worldPt);
+        }
+
+        DrawPolyline(pts, new Color(0.95f, 0.2f, 0.2f, 0.85f), 1.5f);
+    }
+
+    private void DrawHealthBars()
+    {
+        var cam = GetViewport().GetCamera3D();
+        if (cam == null) return;
+
+        const float BarW = 36f;
+        const float BarH = 5f;
+
+        foreach (var selectable in SelectionRegistry.All)
+        {
+            if (selectable is not Node3D node) continue;
+            if (selectable is not IDamageable dmg) continue;
+            if (dmg.IsDead) continue;
+            if (IsBehindCamera(cam, node.GlobalPosition)) continue;
+
+            Vector2 screen = cam.UnprojectPosition(node.GlobalPosition + new Vector3(0f, 1.1f, 0f));
+            float   ratio  = dmg.MaxHealth > 0f ? Mathf.Clamp(dmg.CurrentHealth / dmg.MaxHealth, 0f, 1f) : 0f;
+
+            var bg   = new Rect2(screen.X - BarW / 2f, screen.Y - BarH / 2f, BarW, BarH);
+            var fill = new Rect2(bg.Position, new Vector2(BarW * ratio, BarH));
+
+            DrawRect(bg,   new Color(0f, 0f, 0f, 0.6f), filled: true);
+            DrawRect(fill, Color.FromHsv(ratio / 3f, 1f, 0.9f), filled: true);
+        }
+    }
+
+    private void DrawTracers()
+    {
+        var cam = GetViewport().GetCamera3D();
+        if (cam == null) return;
+
+        foreach (var (from, to, timer) in _tracers)
+        {
+            if (IsBehindCamera(cam, from) || IsBehindCamera(cam, to)) continue;
+
+            float alpha = timer / TracerDuration;
+            Vector2 fromScreen = cam.UnprojectPosition(from);
+            Vector2 toScreen   = cam.UnprojectPosition(to);
+            DrawLine(fromScreen, toScreen, new Color(1f, 0.15f, 0.1f, alpha), 2f);
+        }
+    }
+
     private void DrawDashedLine(Vector2 from, Vector2 to, Color color,
         float dashLen = 10f, float gapLen = 7f, float width = 1.5f)
     {
@@ -266,7 +356,23 @@ public partial class SelectionManager : Control
         }
     }
 
-    private ISelectable GetSelectableAt(Vector2 screenPos)
+    private void HandleUnitFired(Vector3 from, Vector3 to)
+    {
+        _tracers.Add((from, to, TracerDuration));
+    }
+
+    private void TickTracers(float delta)
+    {
+        for (int i = _tracers.Count - 1; i >= 0; i--)
+        {
+            var (from, to, timer) = _tracers[i];
+            float remaining = timer - delta;
+            if (remaining <= 0f) _tracers.RemoveAt(i);
+            else                 _tracers[i] = (from, to, remaining);
+        }
+    }
+
+    private ISelectable GetSelectableAt(Vector2 screenPos, bool friendlyOnly = true)
     {
         const float SelectRadius = 40f;
         var cam = GetViewport().GetCamera3D();
@@ -277,6 +383,7 @@ public partial class SelectionManager : Control
 
         foreach (var selectable in SelectionRegistry.All)
         {
+            if (friendlyOnly && !IsFriendly(selectable)) continue;
             if (selectable is not Node3D node) continue;
             if (IsBehindCamera(cam,node.GlobalPosition)) continue;
 
@@ -288,6 +395,11 @@ public partial class SelectionManager : Control
             }
         }
         return result;
+    }
+
+    private void UpdateHover()
+    {
+        _hovered = GetSelectableAt(GetViewport().GetMousePosition(), friendlyOnly: false) as BaseUnit;
     }
 
     /// Casts a ray from the camera through screenPos and returns where it hits Y=0.
@@ -310,6 +422,9 @@ public partial class SelectionManager : Control
         (cam.GlobalTransform.AffineInverse() * worldPos).Z > 0f;
 
     private Rect2 GetScreenBox() => new Rect2(_boxStart, _boxEnd - _boxStart).Abs();
+
+    private static bool IsFriendly(ISelectable s) =>
+        !PlayerManager.Instance.AreHostile(s.OwnerId, PlayerManager.Instance.LocalPlayerId);
 
     private void AddToSelection(ISelectable s)
     {

@@ -2,6 +2,7 @@ using MilSim.Autoloads;
 using MilSim.Core.Orders;
 using MilSim.Data;
 using MilSim.Entities.Units.Components;
+using MilSim.Entities.Units.Visual;
 
 namespace MilSim.Entities.Units;
 
@@ -14,6 +15,8 @@ public partial class BaseUnit : CharacterBody3D, IDamageable, ISelectable, IOrde
     public float CurrentHealth => _health.CurrentHealth;
     public bool  IsDead        => _health.IsDead;
     public bool  IsSelected    => _selection.IsSelected;
+    public float AttackRange   => _combat?.AttackRange ?? 0f;
+    public UnitType UnitType   => Data?.UnitType ?? UnitType.Infantry;
 
     protected HealthComponent    _health;
     protected MovementComponent  _movement;
@@ -34,6 +37,11 @@ public partial class BaseUnit : CharacterBody3D, IDamageable, ISelectable, IOrde
 
         _health.Died                    += OnDied;
         _movement.ArrivedAtDestination  += OnArrivedAtDestination;
+
+        bool hostile = PlayerManager.Instance.AreHostile(OwnerId, PlayerManager.Instance.LocalPlayerId);
+        var cube = GetNodeOrNull<UnitCubePlaceholder>("UnitCubePlaceholder");
+        cube?.SetHostile(hostile);
+        cube?.SetLabel(Data != null ? Data.UnitName : Name);
 
         SelectionRegistry.Register(this);
     }
@@ -109,6 +117,7 @@ public partial class BaseUnit : CharacterBody3D, IDamageable, ISelectable, IOrde
     protected virtual void ApplyData(UnitData data)
     {
         _health.MaxHealth = data.MaxHealth;
+        _health.InitHealth();
         if (_movement != null) _movement.MoveSpeed = data.MoveSpeed;
         if (_combat   != null) _combat.LoadFromData(data);
     }
