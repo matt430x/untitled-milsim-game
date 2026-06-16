@@ -25,9 +25,7 @@ public partial class SelectionManager : Node2D
     {
         TickIndicators((float)delta);
 
-        // Redraw every frame while units are selected so route lines track unit positions
-        if (_selected.Count > 0)
-            QueueRedraw();
+        QueueRedraw();
     }
 
     public override void _UnhandledInput(InputEvent @event)
