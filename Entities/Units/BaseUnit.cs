@@ -5,19 +5,19 @@ using MilSim.Entities.Units.Components;
 
 namespace MilSim.Entities.Units;
 
-public partial class BaseUnit : CharacterBody2D, IDamageable, ISelectable, IOrderReceiver
+public partial class BaseUnit : CharacterBody3D, IDamageable, ISelectable, IOrderReceiver
 {
     [Export] public UnitData Data { get; set; }
 
-    public int OwnerId => _selection.OwnerId;
-    public float MaxHealth => _health.MaxHealth;
+    public int   OwnerId       => _selection.OwnerId;
+    public float MaxHealth     => _health.MaxHealth;
     public float CurrentHealth => _health.CurrentHealth;
-    public bool IsDead => _health.IsDead;
-    public bool IsSelected => _selection.IsSelected;
+    public bool  IsDead        => _health.IsDead;
+    public bool  IsSelected    => _selection.IsSelected;
 
-    protected HealthComponent _health;
-    protected MovementComponent _movement;
-    protected CombatComponent _combat;
+    protected HealthComponent    _health;
+    protected MovementComponent  _movement;
+    protected CombatComponent    _combat;
     protected SelectionComponent _selection;
 
     private readonly Queue<IOrder> _orderQueue = new();
@@ -28,15 +28,12 @@ public partial class BaseUnit : CharacterBody2D, IDamageable, ISelectable, IOrde
         _health    = GetNode<HealthComponent>("HealthComponent");
         _movement  = GetNode<MovementComponent>("MovementComponent");
         _selection = GetNode<SelectionComponent>("SelectionComponent");
+        _combat    = GetNodeOrNull<CombatComponent>("CombatComponent");
 
-        // CombatComponent is optional — Builders have none
-        _combat = GetNodeOrNull<CombatComponent>("CombatComponent");
+        if (Data != null) ApplyData(Data);
 
-        if (Data != null)
-            ApplyData(Data);
-
-        _health.Died += OnDied;
-        _movement.ArrivedAtDestination += OnArrivedAtDestination;
+        _health.Died                    += OnDied;
+        _movement.ArrivedAtDestination  += OnArrivedAtDestination;
 
         SelectionRegistry.Register(this);
     }
@@ -44,7 +41,7 @@ public partial class BaseUnit : CharacterBody2D, IDamageable, ISelectable, IOrde
     public override void _ExitTree()
     {
         SelectionRegistry.Unregister(this);
-        _health.Died -= OnDied;
+        _health.Died                   -= OnDied;
         _movement.ArrivedAtDestination -= OnArrivedAtDestination;
     }
 
@@ -65,7 +62,6 @@ public partial class BaseUnit : CharacterBody2D, IDamageable, ISelectable, IOrde
 
     public void QueueOrder(IOrder order)
     {
-        // If idle, start immediately rather than silently doing nothing
         if (_currentOrder == null && _orderQueue.Count == 0)
             IssueOrder(order);
         else
@@ -78,6 +74,16 @@ public partial class BaseUnit : CharacterBody2D, IDamageable, ISelectable, IOrde
         _currentOrder = null;
         _movement?.Stop();
         _combat?.ClearTarget();
+    }
+
+    /// Returns all pending destinations in order: active move first, then queued waypoints.
+    public List<Vector3> GetRoute()
+    {
+        var pts = new List<Vector3>();
+        if (_currentOrder is MoveOrder mo) pts.Add(mo.Destination);
+        foreach (var order in _orderQueue)
+            if (order is MoveOrder wp) pts.Add(wp.Destination);
+        return pts;
     }
 
     protected virtual void ExecuteOrder(IOrder order)
@@ -100,23 +106,11 @@ public partial class BaseUnit : CharacterBody2D, IDamageable, ISelectable, IOrde
         }
     }
 
-    /// Returns all pending destinations in order: current move target first, then queued waypoints.
-    public List<Vector2> GetRoute()
-    {
-        var pts = new List<Vector2>();
-        if (_currentOrder is MoveOrder mo)
-            pts.Add(mo.Destination);
-        foreach (var order in _orderQueue)
-            if (order is MoveOrder wp)
-                pts.Add(wp.Destination);
-        return pts;
-    }
-
     protected virtual void ApplyData(UnitData data)
     {
         _health.MaxHealth = data.MaxHealth;
         if (_movement != null) _movement.MoveSpeed = data.MoveSpeed;
-        if (_combat != null)   _combat.LoadFromData(data);
+        if (_combat   != null) _combat.LoadFromData(data);
     }
 
     private void OnDied(int attackerId)

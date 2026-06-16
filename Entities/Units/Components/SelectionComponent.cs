@@ -1,6 +1,6 @@
 namespace MilSim.Entities.Units.Components;
 
-public partial class SelectionComponent : Node2D, ISelectable
+public partial class SelectionComponent : Node3D, ISelectable
 {
     [Signal] public delegate void SelectedEventHandler();
     [Signal] public delegate void DeselectedEventHandler();
@@ -9,39 +9,47 @@ public partial class SelectionComponent : Node2D, ISelectable
 
     public bool IsSelected { get; private set; }
 
-    // Isometric ground ellipse — matches 2:1 tile ratio
-    private static readonly Color RingColor = new(0.2f, 0.9f, 0.2f);
-    private const float RingRx = 28f;
-    private const float RingRy = 12f;
-    private const float RingOffsetY = 6f;
-    private const int   RingSegments = 32;
+    private MeshInstance3D _ring;
 
-    public override void _Ready() => Visible = false;
-
-    public override void _Draw()
+    public override void _Ready()
     {
-        var pts = new Vector2[RingSegments + 1];
-        for (int i = 0; i <= RingSegments; i++)
+        _ring = new MeshInstance3D();
+
+        var torus = new TorusMesh
         {
-            float a = i / (float)RingSegments * MathF.PI * 2f;
-            pts[i] = new Vector2(MathF.Cos(a) * RingRx, MathF.Sin(a) * RingRy + RingOffsetY);
-        }
-        DrawPolyline(pts, RingColor, 2f);
+            InnerRadius  = 0.42f,
+            OuterRadius  = 0.55f,
+            Rings        = 32,
+            RingSegments = 8,
+        };
+
+        var mat = new StandardMaterial3D
+        {
+            AlbedoColor              = new Color(0.2f, 0.9f, 0.2f),
+            EmissionEnabled          = true,
+            Emission                 = new Color(0.2f, 0.9f, 0.2f),
+            EmissionEnergyMultiplier = 0.6f,
+        };
+        torus.Material = mat;
+
+        _ring.Mesh    = torus;
+        _ring.Visible = false;
+        AddChild(_ring);
     }
 
     public void Select()
     {
         if (IsSelected) return;
-        IsSelected = true;
-        Visible = true;
+        IsSelected    = true;
+        _ring.Visible = true;
         EmitSignal(SignalName.Selected);
     }
 
     public void Deselect()
     {
         if (!IsSelected) return;
-        IsSelected = false;
-        Visible = false;
+        IsSelected    = false;
+        _ring.Visible = false;
         EmitSignal(SignalName.Deselected);
     }
 }

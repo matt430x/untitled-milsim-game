@@ -1,70 +1,57 @@
 namespace MilSim.World;
 
 /// <summary>
-/// Visual ground plane and coordinate system for the match.
-/// The tile grid is internal infrastructure only — invisible to the player.
-/// Unit movement uses NavigationAgent2D (smooth). Buildings are placed in world space.
-/// Tiles are only used for terrain type queries and build-radius checks.
+/// Flat ground plane for the match. Tile coordinates map 1:1 to world XZ coordinates.
+/// The visual mesh and ground collider are created at runtime so this node stays
+/// lightweight in the scene file.
 /// </summary>
-public partial class Baseplate : Node2D
+public partial class Baseplate : Node3D
 {
-    [Export] public int TilesWide  { get; set; } = 80;
-    [Export] public int TilesTall  { get; set; } = 80;
-    [Export] public int TileWidth  { get; set; } = 128;
-    [Export] public int TileHeight { get; set; } = 64;
-    [Export] public Color GroundColor  { get; set; } = new Color(0.33f, 0.52f, 0.23f);
-    [Export] public Color BorderColor  { get; set; } = new Color(0f, 0f, 0f, 0.4f);
+    [Export] public int   TilesWide  { get; set; } = 80;
+    [Export] public int   TilesTall  { get; set; } = 80;
+    [Export] public float TileSize   { get; set; } = 1f;
+    [Export] public Color GroundColor { get; set; } = new Color(0.33f, 0.52f, 0.23f);
 
-    public override void _Draw()
+    public override void _Ready()
     {
-        Vector2[] corners = GetMapCorners();
-        DrawPolygon(corners, new Color[] { GroundColor });
-        DrawPolyline(new Vector2[] { corners[0], corners[1], corners[2], corners[3], corners[0] }, BorderColor, 2f);
+        float w = TilesWide * TileSize;
+        float h = TilesTall * TileSize;
+        var center = new Vector3(w * 0.5f, 0f, h * 0.5f);
+
+        // Visual ground mesh
+        var visual = new MeshInstance3D();
+        var plane  = new PlaneMesh { Size = new Vector2(w, h) };
+        var mat    = new StandardMaterial3D { AlbedoColor = GroundColor };
+        plane.Material = mat;
+        visual.Mesh = plane;
+        visual.Position = center;
+        AddChild(visual);
+
+        // Physics collider so raycasts hit the ground
+        var body   = new StaticBody3D();
+        var col    = new CollisionShape3D();
+        var shape  = new BoxShape3D { Size = new Vector3(w, 0.02f, h) };
+        col.Shape  = shape;
+        body.Position = new Vector3(center.X, -0.01f, center.Z);
+        body.AddChild(col);
+        AddChild(body);
     }
 
-    // --- Coordinate helpers (internal use only) ---
+    // --- Coordinate helpers ---
 
-    public Vector2 TileToWorld(Vector2I tile)
-    {
-        float x = (tile.X - tile.Y) * TileWidth  * 0.5f;
-        float y = (tile.X + tile.Y) * TileHeight * 0.5f;
-        return new Vector2(x, y);
-    }
+    public Vector3 TileToWorld(Vector2I tile) =>
+        new(tile.X * TileSize, 0f, tile.Y * TileSize);
 
-    public Vector2I WorldToTile(Vector2 world)
-    {
-        float tileX = (world.X / (TileWidth  * 0.5f) + world.Y / (TileHeight * 0.5f)) * 0.5f;
-        float tileY = (world.Y / (TileHeight * 0.5f) - world.X / (TileWidth  * 0.5f)) * 0.5f;
-        return new Vector2I((int)MathF.Floor(tileX), (int)MathF.Floor(tileY));
-    }
+    public Vector2I WorldToTile(Vector3 world) =>
+        new((int)(world.X / TileSize), (int)(world.Z / TileSize));
 
-    public bool IsInBounds(Vector2I tile)
-    {
-        return tile.X >= 0 && tile.X < TilesWide &&
-               tile.Y >= 0 && tile.Y < TilesTall;
-    }
+    public bool IsInBounds(Vector2I tile) =>
+        tile.X >= 0 && tile.X < TilesWide &&
+        tile.Y >= 0 && tile.Y < TilesTall;
 
-    public bool IsWorldPositionInBounds(Vector2 world)
-    {
-        return IsInBounds(WorldToTile(world));
-    }
+    public bool IsWorldPositionInBounds(Vector3 world) =>
+        IsInBounds(WorldToTile(world));
 
-    public Vector2 MapCenter()
-    {
-        return TileToWorld(new Vector2I(TilesWide / 2, TilesTall / 2));
-    }
-
-    private Vector2[] GetMapCorners()
-    {
-        float hw = TileWidth  * 0.5f;
-        float hh = TileHeight * 0.5f;
-
-        return new Vector2[]
-        {
-            TileToWorld(new Vector2I(0,            0           )) + new Vector2(  0, -hh), // top
-            TileToWorld(new Vector2I(TilesWide - 1, 0          )) + new Vector2( hw,   0), // right
-            TileToWorld(new Vector2I(TilesWide - 1, TilesTall-1)) + new Vector2(  0,  hh), // bottom
-            TileToWorld(new Vector2I(0,            TilesTall - 1)) + new Vector2(-hw,   0), // left
-        };
-    }
+    public Vector3 MapCenter() =>
+        new(TilesWide * TileSize * 0.5f, 0f, TilesTall * TileSize * 0.5f);
 }

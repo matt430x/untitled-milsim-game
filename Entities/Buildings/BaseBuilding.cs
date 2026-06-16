@@ -5,32 +5,29 @@ using MilSim.Entities.Units.Components;
 
 namespace MilSim.Entities.Buildings;
 
-public partial class BaseBuilding : StaticBody2D, IDamageable, ISelectable
+public partial class BaseBuilding : StaticBody3D, IDamageable, ISelectable
 {
-    [Export] public BuildingData Data { get; set; }
-    [Export] public int OwnerId { get; set; }
+    [Export] public BuildingData Data    { get; set; }
+    [Export] public int          OwnerId { get; set; }
 
-    public float MaxHealth => _health.MaxHealth;
+    public float MaxHealth     => _health.MaxHealth;
     public float CurrentHealth => _health.CurrentHealth;
-    public bool IsDead => _health.IsDead;
-    public bool IsSelected => _selection.IsSelected;
+    public bool  IsDead        => _health.IsDead;
+    public bool  IsSelected    => _selection.IsSelected;
 
-    protected HealthComponent _health;
+    protected HealthComponent    _health;
     protected SelectionComponent _selection;
-    protected IncomeComponent _income;
+    protected IncomeComponent    _income;
     protected ProductionComponent _production;
 
     public override void _Ready()
     {
         _health    = GetNode<HealthComponent>("HealthComponent");
         _selection = GetNode<SelectionComponent>("SelectionComponent");
+        _income      = GetNodeOrNull<IncomeComponent>("IncomeComponent");
+        _production  = GetNodeOrNull<ProductionComponent>("ProductionComponent");
 
-        // Optional components — not all buildings have these
-        _income     = GetNodeOrNull<IncomeComponent>("IncomeComponent");
-        _production = GetNodeOrNull<ProductionComponent>("ProductionComponent");
-
-        if (Data != null)
-            ApplyData(Data);
+        if (Data != null) ApplyData(Data);
 
         _health.Died += OnDied;
 
@@ -41,13 +38,9 @@ public partial class BaseBuilding : StaticBody2D, IDamageable, ISelectable
         );
     }
 
-    public override void _ExitTree()
-    {
-        _health.Died -= OnDied;
-    }
+    public override void _ExitTree() => _health.Died -= OnDied;
 
     public void TakeDamage(float amount, int attackerId) => _health.TakeDamage(amount, attackerId);
-
     public void Select()   => _selection.Select();
     public void Deselect() => _selection.Deselect();
 
@@ -59,11 +52,10 @@ public partial class BaseBuilding : StaticBody2D, IDamageable, ISelectable
 
     private void OnDied(int attackerId)
     {
-        int id = GetInstanceId().ToString().GetHashCode();
+        int          id   = GetInstanceId().ToString().GetHashCode();
         BuildingType type = Data?.BuildingType ?? BuildingType.Headquarters;
 
         EventBus.RaiseBuildingDestroyed(id, OwnerId, type);
-
         if (type == BuildingType.Headquarters)
             EventBus.RaiseHqDestroyed(OwnerId);
 

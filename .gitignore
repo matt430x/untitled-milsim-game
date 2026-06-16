@@ -17,6 +17,7 @@ bin/
 *.tmp
 *.log
 GameDesignDocument_FINAL2.txt
+CLAUDE.md
 
 # OS junk
 .DS_Store

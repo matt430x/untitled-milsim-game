@@ -6,16 +6,17 @@
 [ext_resource type="Script" path="res://Entities/Units/Components/MovementComponent.cs" id="4_Movement"]
 [ext_resource type="Script" path="res://Entities/Units/Components/SelectionComponent.cs" id="5_Selection"]
 
-[sub_resource type="CircleShape2D" id="Shape_1"]
-radius = 18.0
+[sub_resource type="BoxShape3D" id="Shape_1"]
+size = Vector3(0.5, 0.8, 0.5)
 
-[node name="TestUnit" type="CharacterBody2D"]
+[node name="TestUnit" type="CharacterBody3D"]
 script = ExtResource("1_BaseUnit")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Shape_1")
+position = Vector3(0, 0.4, 0)
 
-[node name="UnitCubePlaceholder" type="Node2D" parent="."]
+[node name="UnitCubePlaceholder" type="Node3D" parent="."]
 script = ExtResource("2_Cube")
 
 [node name="HealthComponent" type="Node" parent="."]
@@ -24,5 +25,5 @@ script = ExtResource("3_Health")
 [node name="MovementComponent" type="Node" parent="."]
 script = ExtResource("4_Movement")
 
-[node name="SelectionComponent" type="Node2D" parent="."]
+[node name="SelectionComponent" type="Node3D" parent="."]
 script = ExtResource("5_Selection")
