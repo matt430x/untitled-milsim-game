@@ -25,7 +25,15 @@ public partial class PlacementTestPanel : Control
         SetAnchorsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore; // only the inner panel captures clicks
         Visible     = false;
-        TestMode.Enabled = true; // this dev panel only exists in the test environment
+
+        // The main menu decides the mode. Outside the test realm this dev panel is
+        // fully inert: no UI, no comma toggle.
+        if (!TestMode.Enabled)
+        {
+            SetProcessUnhandledInput(false);
+            return;
+        }
+
         BuildUi();
     }
 

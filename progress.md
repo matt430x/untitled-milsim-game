@@ -139,6 +139,11 @@ All 11 building types are placed in `Game.tscn` under `World/Buildings` (two row
 - `IncomeComponent` previously self-registered in `_Ready()` with `OwnerId=0`/`Income=0` *before* `BaseBuilding.ApplyData` configured it. Now it registers only when `BaseBuilding` calls `SetActive(true)` after configuring it (matches the skill-doc design).
 - `BaseBuilding.ApplyData` never called `_health.InitHealth()`, so building HP stayed at the component default (100) instead of the data value. Fixed.
 
+### Main Menu & Modes
+- `Scenes/MainMenu.tscn` + `UI/MainMenu.cs` are now the project's main scene (`project.godot` `run/main_scene`). Three buttons: **Start Game** (real loop), **Test Realm** (dev sandbox), **Quit**.
+- Both buttons load the same `Game.tscn`; the only difference is `Systems/TestMode.Enabled`, which the menu sets before `ChangeSceneToFile`. `Start Game` → `false`, `Test Realm` → `true`. Start Game isn't a distinct gameplay loop yet — it just launches the game with dev powers off.
+- `TestMode` gates dev-only powers: selecting enemy entities, the comma spawn panel, and selling anything. `UI/PlacementTestPanel` no longer forces `TestMode` on — outside the test realm it goes fully inert (`SetProcessUnhandledInput(false)`, no UI). Running `Game.tscn` directly (not via the menu) defaults to real mode (`TestMode` false).
+
 ## What Is NOT Yet Built
 
 - **Production wiring**: Production buildings (HQ, Barracks, Vehicle Depot, Airfield, Shipyard) have a configured `ProductionComponent` and `BaseBuilding.QueueUnit(UnitData)` forwards to it, but nothing consumes the `ProductionComplete` signal to actually spawn units yet. Spawn-on-complete (with rally points, unit OwnerId-on-spawn, and unit caps) is the next step — it needs the production UI and a way to set a spawned unit's owner before `_Ready`. Vehicle/Aircraft/Ship unit scenes also don't exist yet.
