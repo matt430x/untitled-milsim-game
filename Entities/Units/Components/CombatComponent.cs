@@ -1,5 +1,6 @@
 using MilSim.Autoloads;
 using MilSim.Data;
+using MilSim.Entities.Buildings;
 using MilSim.Entities.Units;
 
 namespace MilSim.Entities.Units.Components;
@@ -21,9 +22,10 @@ public partial class CombatComponent : Node
 
     private float _cooldownTimer;
     private BaseUnit _self;
-    private BaseUnit _currentTarget;
+    private Node3D _currentTarget; // BaseUnit or BaseBuilding
 
-    public bool HasTarget => _currentTarget != null && !_currentTarget.IsDead;
+    public bool HasTarget => GodotObject.IsInstanceValid(_currentTarget)
+        && _currentTarget is IDamageable d && !d.IsDead;
 
     public override void _Ready()
     {
@@ -62,38 +64,45 @@ public partial class CombatComponent : Node
         DamageVsBuilding = data.DamageVsBuilding;
     }
 
-    private bool OutOfRange(BaseUnit target) =>
+    private bool OutOfRange(Node3D target) =>
         _self.GlobalPosition.DistanceTo(target.GlobalPosition) > AttackRange;
 
-    /// Picks the first hostile unit within range, scanning registration order.
+    /// Picks the first hostile, damageable target (unit or building) within range,
+    /// scanning registration order.
     private void AcquireTarget()
     {
         foreach (var selectable in SelectionRegistry.All)
         {
-            if (selectable is not BaseUnit unit || unit == _self || unit.IsDead) continue;
-            if (!PlayerManager.Instance.AreHostile(_self.OwnerId, unit.OwnerId)) continue;
-            if (OutOfRange(unit)) continue;
+            if (ReferenceEquals(selectable, _self)) continue;
+            if (selectable is not IDamageable dmg || dmg.IsDead) continue;
+            if (!PlayerManager.Instance.AreHostile(_self.OwnerId, selectable.OwnerId)) continue;
+            if (selectable is not Node3D node || OutOfRange(node)) continue;
 
-            _currentTarget = unit;
+            _currentTarget = node;
             return;
         }
     }
 
     private void ExecuteAttack()
     {
-        float multiplier = _currentTarget.UnitType switch
+        float multiplier = _currentTarget switch
         {
-            UnitType.Infantry => DamageVsInfantry,
-            UnitType.Vehicle  => DamageVsVehicle,
-            UnitType.Aircraft => DamageVsAircraft,
-            UnitType.Ship     => DamageVsShip,
-            _                 => 1f
+            BaseBuilding  => DamageVsBuilding,
+            BaseUnit unit => unit.UnitType switch
+            {
+                UnitType.Infantry => DamageVsInfantry,
+                UnitType.Vehicle  => DamageVsVehicle,
+                UnitType.Aircraft => DamageVsAircraft,
+                UnitType.Ship     => DamageVsShip,
+                _                 => 1f
+            },
+            _ => 1f
         };
 
         var muzzle = _self.GlobalPosition + new Vector3(0f, 0.4f, 0f);
         var hit    = _currentTarget.GlobalPosition + new Vector3(0f, 0.4f, 0f);
         EventBus.RaiseUnitFired(muzzle, hit);
-        _currentTarget.TakeDamage(Damage * multiplier, _self.GetInstanceId().ToString().GetHashCode());
+        ((IDamageable)_currentTarget).TakeDamage(Damage * multiplier, _self.GetInstanceId().ToString().GetHashCode());
         _cooldownTimer = AttackCooldown;
     }
 }

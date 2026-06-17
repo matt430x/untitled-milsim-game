@@ -11,6 +11,7 @@ public readonly struct PlacementRequest
 {
     public PackedScene   Scene    { get; init; }
     public PlaceableKind Kind     { get; init; }
+    public UnitData      Unit     { get; init; } // null unless Kind == Unit
     public BuildingData  Building { get; init; } // null unless Kind == Building
     public int           OwnerId  { get; init; }
 }

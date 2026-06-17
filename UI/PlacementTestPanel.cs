@@ -114,12 +114,13 @@ public partial class PlacementTestPanel : Control
         list.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         column.AddChild(list);
 
-        var entries = new List<(string Name, PackedScene Scene, BuildingData Building)>();
+        var entries = new List<(string Name, PackedScene Scene, UnitData Unit, BuildingData Building)>();
         string ext = kind == PlaceableKind.Crystal ? ".tscn" : ".tres";
         foreach (var path in GetFiles(dir, ext))
         {
             string name;
             PackedScene scene;
+            UnitData unit = null;
             BuildingData building = null;
             switch (kind)
             {
@@ -135,28 +136,28 @@ public partial class PlacementTestPanel : Control
                     name  = path.GetFile().GetBaseName();
                     break;
                 default:
-                    var data = GD.Load<UnitData>(path);
-                    if (data == null) continue;
-                    name  = data.UnitName;
-                    scene = data.Scene;
+                    unit = GD.Load<UnitData>(path);
+                    if (unit == null) continue;
+                    name  = unit.UnitName;
+                    scene = unit.Scene;
                     break;
             }
-            entries.Add((name, scene, building));
+            entries.Add((name, scene, unit, building));
         }
 
         entries.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
-        foreach (var (name, scene, building) in entries)
+        foreach (var (name, scene, unit, building) in entries)
         {
             var btn = new Button { Text = name };
-            btn.Pressed += () => OnEntryPressed(name, scene, kind, building, ownerId);
+            btn.Pressed += () => OnEntryPressed(name, scene, kind, unit, building, ownerId);
             list.AddChild(btn);
         }
 
         return column;
     }
 
-    private void OnEntryPressed(string name, PackedScene scene, PlaceableKind kind, BuildingData building, int ownerId)
+    private void OnEntryPressed(string name, PackedScene scene, PlaceableKind kind, UnitData unit, BuildingData building, int ownerId)
     {
         SelectedName  = name;
         SelectedScene = scene;
@@ -165,6 +166,7 @@ public partial class PlacementTestPanel : Control
         {
             Scene    = scene,
             Kind     = kind,
+            Unit     = unit,
             Building = building,
             OwnerId  = ownerId,
         });

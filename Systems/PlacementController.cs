@@ -28,6 +28,8 @@ public partial class PlacementController : Node3D
     private PackedScene   _scene;
     private PlaceableKind _kind;
     private int           _ownerId;
+    private UnitData      _unitData;
+    private BuildingData  _buildingData;
     private bool          _requiresCrystal;
     private Vector2       _footprint; // full XZ extents
     private float         _height;
@@ -92,6 +94,8 @@ public partial class PlacementController : Node3D
         _scene           = request.Scene;
         _kind            = request.Kind;
         _ownerId         = request.OwnerId;
+        _unitData        = request.Unit;
+        _buildingData    = request.Building;
         _requiresCrystal = request.Kind == PlaceableKind.Building && request.Building != null
                         && request.Building.RequiresCrystal;
 
@@ -150,6 +154,7 @@ public partial class PlacementController : Node3D
         {
             case PlaceableKind.Building:
                 var building = _scene.Instantiate<BaseBuilding>();
+                building.Data           = _buildingData;
                 building.OwnerId        = ownerId;
                 building.GlobalPosition = _ghostPos;
                 GetTree().Root.GetNode<Node3D>("Game/World/Buildings").AddChild(building);
@@ -161,6 +166,7 @@ public partial class PlacementController : Node3D
                 break;
             default:
                 var unit = _scene.Instantiate<BaseUnit>();
+                unit.Data = _unitData;
                 unit.GetNode<SelectionComponent>("SelectionComponent").OwnerId = ownerId;
                 unit.GlobalPosition = _ghostPos;
                 GetTree().Root.GetNode<Node3D>("Game/World/Units").AddChild(unit);
