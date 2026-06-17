@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://Entities/Buildings/BaseBuilding.cs" id="1_base"]
+[ext_resource type="Script" path="res://Entities/Buildings/Visual/BuildingBoxPlaceholder.cs" id="2_box"]
+[ext_resource type="Script" path="res://Entities/Units/Components/HealthComponent.cs" id="3_health"]
+[ext_resource type="Script" path="res://Entities/Units/Components/SelectionComponent.cs" id="4_sel"]
+
+[sub_resource type="BoxShape3D" id="Shape_1"]
+size = Vector3(1, 1, 0.3)
+
+[node name="Wall" type="StaticBody3D"]
+script = ExtResource("1_base")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_1")
+position = Vector3(0, 0.5, 0)
+
+[node name="BuildingBoxPlaceholder" type="Node3D" parent="."]
+script = ExtResource("2_box")
+Size = Vector3(1, 1, 0.3)
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("3_health")
+
+[node name="SelectionComponent" type="Node3D" parent="."]
+script = ExtResource("4_sel")
+RingScale = 1.5

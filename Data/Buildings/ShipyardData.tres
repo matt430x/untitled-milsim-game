@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Data/BuildingData.cs" id="1_data"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Shipyard.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_data")
+BuildingName = "Shipyard"
+BuildingType = 7
+MaxHealth = 900.0
+Cost = 400
+BuildTime = 22.0
+RequiresCommandCenter = false
+Scene = ExtResource("2_scene")

@@ -6,6 +6,7 @@ public partial class SelectionComponent : Node3D, ISelectable
     [Signal] public delegate void DeselectedEventHandler();
 
     [Export] public int OwnerId { get; set; }
+    [Export] public float RingScale { get; set; } = 1f;
 
     public bool IsSelected { get; private set; }
 
@@ -17,8 +18,8 @@ public partial class SelectionComponent : Node3D, ISelectable
 
         var torus = new TorusMesh
         {
-            InnerRadius  = 0.42f,
-            OuterRadius  = 0.55f,
+            InnerRadius  = 0.42f * RingScale,
+            OuterRadius  = 0.55f * RingScale,
             Rings        = 32,
             RingSegments = 8,
         };

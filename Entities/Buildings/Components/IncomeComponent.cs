@@ -7,12 +7,7 @@ public partial class IncomeComponent : Node, IIncomeSource
     [Export] public float IncomePerTick { get; set; }
     [Export] public int OwnerId { get; set; }
 
-    public bool IsActive { get; private set; } = true;
-
-    public override void _Ready()
-    {
-        EventBus.RaiseIncomeSourceAdded(this);
-    }
+    public bool IsActive { get; private set; }
 
     public override void _ExitTree()
     {

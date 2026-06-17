@@ -1,10 +1,11 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=43 format=3]
 
 [ext_resource type="Script" path="res://World/GameCamera.cs" id="1"]
 [ext_resource type="Script" path="res://World/Baseplate.cs" id="2"]
 [ext_resource type="Script" path="res://Systems/EconomySystem.cs" id="3"]
 [ext_resource type="Script" path="res://Systems/SelectionManager.cs" id="4"]
 [ext_resource type="Script" path="res://UI/MinimapPanel.cs" id="6_Minimap"]
+[ext_resource type="Script" path="res://UI/PlacementTestPanel.cs" id="43_PlaceTest"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Rifleman.tscn" id="7_Rifleman"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/MachineGunner.tscn" id="8_MachineGunner"]
 [ext_resource type="PackedScene" path="res://Scenes/Units/Sniper.tscn" id="9_Sniper"]
@@ -19,6 +20,28 @@
 [ext_resource type="Resource" path="res://Data/Units/EngineerData.tres" id="18_EngineerData"]
 [ext_resource type="Resource" path="res://Data/Units/MedicData.tres" id="19_MedicData"]
 [ext_resource type="Resource" path="res://Data/Units/BuilderData.tres" id="20_BuilderData"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Headquarters.tscn" id="21_HQ"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/CommandCenter.tscn" id="22_CC"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Powerplant.tscn" id="23_PP"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/OilRig.tscn" id="24_Oil"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Barracks.tscn" id="25_Bar"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/VehicleDepot.tscn" id="26_Veh"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Airfield.tscn" id="27_Air"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Shipyard.tscn" id="28_Ship"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/ResearchLab.tscn" id="29_Lab"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Wall.tscn" id="30_Wall"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Turret.tscn" id="31_Turret"]
+[ext_resource type="Resource" path="res://Data/Buildings/HeadquartersData.tres" id="32_HQd"]
+[ext_resource type="Resource" path="res://Data/Buildings/CommandCenterData.tres" id="33_CCd"]
+[ext_resource type="Resource" path="res://Data/Buildings/PowerplantData.tres" id="34_PPd"]
+[ext_resource type="Resource" path="res://Data/Buildings/OilRigData.tres" id="35_Oild"]
+[ext_resource type="Resource" path="res://Data/Buildings/BarracksData.tres" id="36_Bard"]
+[ext_resource type="Resource" path="res://Data/Buildings/VehicleDepotData.tres" id="37_Vehd"]
+[ext_resource type="Resource" path="res://Data/Buildings/AirfieldData.tres" id="38_Aird"]
+[ext_resource type="Resource" path="res://Data/Buildings/ShipyardData.tres" id="39_Shipd"]
+[ext_resource type="Resource" path="res://Data/Buildings/ResearchLabData.tres" id="40_Labd"]
+[ext_resource type="Resource" path="res://Data/Buildings/WallData.tres" id="41_Walld"]
+[ext_resource type="Resource" path="res://Data/Buildings/TurretData.tres" id="42_Turretd"]
 
 [node name="Game" type="Node3D"]
 
@@ -130,6 +153,68 @@ Data = ExtResource("20_BuilderData")
 [node name="SelectionComponent" parent="World/Units/EnemyBuilder1" index="4"]
 OwnerId = 2
 
+[node name="Buildings" type="Node3D" parent="World"]
+
+[node name="Headquarters1" parent="World/Buildings" instance=ExtResource("21_HQ")]
+position = Vector3(28, 0, 28)
+Data = ExtResource("32_HQd")
+OwnerId = 1
+
+[node name="CommandCenter1" parent="World/Buildings" instance=ExtResource("22_CC")]
+position = Vector3(33, 0, 28)
+Data = ExtResource("33_CCd")
+OwnerId = 1
+
+[node name="Powerplant1" parent="World/Buildings" instance=ExtResource("23_PP")]
+position = Vector3(37, 0, 28)
+Data = ExtResource("34_PPd")
+OwnerId = 1
+
+[node name="OilRig1" parent="World/Buildings" instance=ExtResource("24_Oil")]
+position = Vector3(41, 0, 28)
+Data = ExtResource("35_Oild")
+OwnerId = 1
+
+[node name="Barracks1" parent="World/Buildings" instance=ExtResource("25_Bar")]
+position = Vector3(45, 0, 28)
+Data = ExtResource("36_Bard")
+OwnerId = 1
+
+[node name="VehicleDepot1" parent="World/Buildings" instance=ExtResource("26_Veh")]
+position = Vector3(49, 0, 28)
+Data = ExtResource("37_Vehd")
+OwnerId = 1
+
+[node name="Airfield1" parent="World/Buildings" instance=ExtResource("27_Air")]
+position = Vector3(28, 0, 33)
+Data = ExtResource("38_Aird")
+OwnerId = 1
+
+[node name="Shipyard1" parent="World/Buildings" instance=ExtResource("28_Ship")]
+position = Vector3(33, 0, 33)
+Data = ExtResource("39_Shipd")
+OwnerId = 1
+
+[node name="ResearchLab1" parent="World/Buildings" instance=ExtResource("29_Lab")]
+position = Vector3(37, 0, 33)
+Data = ExtResource("40_Labd")
+OwnerId = 1
+
+[node name="Wall1" parent="World/Buildings" instance=ExtResource("30_Wall")]
+position = Vector3(41, 0, 33)
+Data = ExtResource("41_Walld")
+OwnerId = 1
+
+[node name="Turret1" parent="World/Buildings" instance=ExtResource("31_Turret")]
+position = Vector3(45, 0, 33)
+Data = ExtResource("42_Turretd")
+OwnerId = 1
+
+[node name="EnemyHeadquarters1" parent="World/Buildings" instance=ExtResource("21_HQ")]
+position = Vector3(52, 0, 33)
+Data = ExtResource("32_HQd")
+OwnerId = 2
+
 [node name="Systems" type="Node" parent="."]
 
 [node name="EconomySystem" type="Node" parent="Systems"]
@@ -142,3 +227,6 @@ script = ExtResource("4")
 
 [node name="MinimapPanel" type="Control" parent="UI"]
 script = ExtResource("6_Minimap")
+
+[node name="PlacementTestPanel" type="Control" parent="UI"]
+script = ExtResource("43_PlaceTest")

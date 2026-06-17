@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Data/BuildingData.cs" id="1_data"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Headquarters.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_data")
+BuildingName = "Headquarters"
+BuildingType = 0
+MaxHealth = 2000.0
+Cost = 1000
+BuildTime = 30.0
+BuildRadius = 18.0
+RequiresCommandCenter = false
+RequiresCrystal = true
+Scene = ExtResource("2_scene")

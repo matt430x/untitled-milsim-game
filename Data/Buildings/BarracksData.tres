@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Data/BuildingData.cs" id="1_data"]
+[ext_resource type="PackedScene" path="res://Scenes/Buildings/Barracks.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_data")
+BuildingName = "Barracks"
+BuildingType = 4
+MaxHealth = 800.0
+Cost = 200
+BuildTime = 15.0
+Scene = ExtResource("2_scene")
