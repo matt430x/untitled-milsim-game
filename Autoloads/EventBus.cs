@@ -44,6 +44,9 @@ public static class EventBus
     // --- Selection ---
     public static event Action<List<int>> OnSelectionChanged; // list of selected entity ids
 
+    // --- Placement ---
+    public static event Action<PlacementRequest> OnPlacementRequested;
+
     // --- Players ---
     public static event Action<int> OnPlayerJoined;
     public static event Action<int> OnPlayerDisconnected;
@@ -73,6 +76,9 @@ public static class EventBus
     public static void RaiseUnitFired(Vector3 from, Vector3 to)                        => OnUnitFired?.Invoke(from, to);
 
     public static void RaiseSelectionChanged(List<int> selectedIds)                    => OnSelectionChanged?.Invoke(selectedIds);
+
+    public static void RaisePlacementRequested(PlacementRequest request)
+        => OnPlacementRequested?.Invoke(request);
 
     public static void RaisePlayerJoined(int playerId)                                 => OnPlayerJoined?.Invoke(playerId);
     public static void RaisePlayerDisconnected(int playerId)                           => OnPlayerDisconnected?.Invoke(playerId);

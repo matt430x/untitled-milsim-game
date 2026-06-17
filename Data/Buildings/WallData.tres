@@ -11,4 +11,5 @@ MaxHealth = 400.0
 Cost = 20
 BuildTime = 3.0
 RequiresCommandCenter = false
+RequiresCrystal = true
 Scene = ExtResource("2_scene")

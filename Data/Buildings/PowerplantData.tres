@@ -12,5 +12,6 @@ Cost = 150
 BuildTime = 10.0
 RequiresCommandCenter = false
 RequiresCrystal = true
+ClaimsCrystalZone = false
 IncomePerTick = 10.0
 Scene = ExtResource("2_scene")

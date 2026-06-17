@@ -125,6 +125,14 @@ Data resources: `Data/Units/{UnitName}Data.tres`
 
 **Stats are placeholders — not balanced.** Naval buildings (Oil Rig, Shipyard) included for completeness even though the naval *system* is deferred per GDD.
 
+### Placement System
+- `Systems/PlacementController.cs` — `Node3D` under `World`. Subscribes to `EventBus.OnPlacementRequested(PackedScene, isBuilding, BuildingData)`. Shows a translucent box ghost (sized to the scene's `BuildingBoxPlaceholder.Size`, or 0.5×0.8×0.5 for units) that follows the mouse on the Y=0 ground (free placement, no snapping). **Green** ghost = valid, **red** = obstructed. Left-click places (instantiates the real scene, sets `OwnerId`/`SelectionComponent.OwnerId` to `LocalPlayerId` before `AddChild`) and exits placement; Esc or right-click cancels.
+- **Validity rules** (all must pass for green): footprint fully inside the 80×80 map; footprint doesn't AABB-overlap any existing building (units don't block); and for `BuildingData.RequiresCrystal` buildings only, footprint center is within some crystal's `BuildRadius` **and that crystal isn't enemy-claimed**. A crystal is "enemy-claimed" (relative to the placing owner) when a hostile building with `BuildingData.ClaimsCrystalZone = true` sits within its `BuildRadius`; powerplants set `ClaimsCrystalZone = false` so they don't claim. Both rules are data-driven (no hardcoded building-type checks): every building's `.tres` sets `RequiresCrystal = true` except the Shipyard, and only the Powerplant sets `ClaimsCrystalZone = false`.
+- `UI/PlacementTestPanel.cs` now raises `EventBus.RaisePlacementRequested(scene, PlaceableKind, BuildingData)` on entry click (previously only recorded the selection). Three columns: **UNITS** (`Data/Units/*.tres`), **BUILDINGS** (`Data/Buildings/*.tres`), **CRYSTALS** (`Scenes/Crystals/*.tscn`, listed by file name). `PlaceableKind` enum (Unit/Building/Crystal) drives both the panel loading and `PlacementController` placement/validity branching.
+- `SelectionManager.HandleMouseButton` early-returns while `PlacementController.IsPlacing`, so world clicks don't select/box/order during placement.
+- `Entities/Crystals/CrystalNode.cs` + `Systems/CrystalRegistry.cs` + `Scenes/Crystals/Crystal.tscn` — new crystal entity. Exported `BuildRadius` (default 15) + `CrystalType`. Cyan box + a flat ground ring showing the build zone. Two crystals pre-placed in `Game.tscn` (`World/Crystals`) at (34,30) and (60,60), and crystals are also placeable from the spawn menu (CRYSTALS column). Placement validity for a crystal = on-map + no building overlap (no owner, no crystal-zone requirement). Footprint size (1.2×2.2×1.2) is a constant in `PlacementController` matching the code-built `CrystalNode` mesh.
+- Ghost tint alpha is 0.6 — tweak `ValidColor`/`InvalidColor` in `PlacementController` if a more/less opaque preview is wanted.
+
 All 11 building types are placed in `Game.tscn` under `World/Buildings` (two rows, OwnerId=1) plus one `EnemyHeadquarters1` (OwnerId=2) for testing selection/destruction. They are selectable, show health bars, appear on the minimap, and the Turret auto-fires at hostile units in range.
 
 #### Bugs fixed during this pass
@@ -134,7 +142,7 @@ All 11 building types are placed in `Game.tscn` under `World/Buildings` (two row
 ## What Is NOT Yet Built
 
 - **Production wiring**: Production buildings (HQ, Barracks, Vehicle Depot, Airfield, Shipyard) have a configured `ProductionComponent` and `BaseBuilding.QueueUnit(UnitData)` forwards to it, but nothing consumes the `ProductionComplete` signal to actually spawn units yet. Spawn-on-complete (with rally points, unit OwnerId-on-spawn, and unit caps) is the next step — it needs the production UI and a way to set a spawned unit's owner before `_Ready`. Vehicle/Aircraft/Ship unit scenes also don't exist yet.
-- **Build zone / placement**: `RequiresCommandCenter` / `RequiresCrystal` / `BuildRadius` are stored in data but no build-zone enforcement or Builder placement UI exists. Buildings are currently hand-placed in `Game.tscn`.
+- **Build zone / placement**: ~~no build-zone enforcement~~ — **placement now implemented** (see below). `RequiresCommandCenter` is treated as an elimination condition, *not* a placement rule.
 - **Economy income**: `EconomySystem` ticks and `IncomeComponent` now registers correctly, but income only accrues for players with a registered `PlayerContext` (`PlayerManager.AddMoney` no-ops otherwise). No player bootstrap exists yet, so money does not visibly tick in the prototype scene.
 - **Win condition**: No HQ destruction or game-over logic.
 - **Vehicles, Aircraft, Ships**: Designed in GDD, not started.
@@ -143,7 +151,7 @@ All 11 building types are placed in `Game.tscn` under `World/Buildings` (two row
 - **AI opponents**: Deferred to post-launch.
 - **Fog of war**: Deferred to post-launch.
 - **Unit abilities**: Medic heal, Engineer repair — no ability system exists yet.
-- **Builder placing structures**: No structure-placement UI or logic.
+- **Builder placing structures**: Placement logic exists (via the dev spawn menu), but it isn't yet gated behind a selected Builder unit or tied to costs/build time — any menu entry can be placed for free.
 
 ---
 

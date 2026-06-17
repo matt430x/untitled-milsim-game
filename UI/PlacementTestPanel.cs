@@ -1,4 +1,6 @@
+using MilSim.Autoloads;
 using MilSim.Data;
+using MilSim.Systems;
 
 namespace MilSim.UI;
 
@@ -9,8 +11,9 @@ namespace MilSim.UI;
 /// </summary>
 public partial class PlacementTestPanel : Control
 {
-    private const string UnitDataDir     = "res://Data/Units";
-    private const string BuildingDataDir = "res://Data/Buildings";
+    private const string UnitDataDir      = "res://Data/Units";
+    private const string BuildingDataDir  = "res://Data/Buildings";
+    private const string CrystalSceneDir  = "res://Scenes/Crystals";
 
     public PackedScene SelectedScene { get; private set; }
     public string      SelectedName  { get; private set; }
@@ -22,6 +25,7 @@ public partial class PlacementTestPanel : Control
         SetAnchorsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore; // only the inner panel captures clicks
         Visible     = false;
+        TestMode.Enabled = true; // this dev panel only exists in the test environment
         BuildUi();
     }
 
@@ -56,69 +60,109 @@ public partial class PlacementTestPanel : Control
 
         root.AddChild(new HSeparator());
 
-        var columns = new HBoxContainer();
-        columns.AddThemeConstantOverride("separation", 16);
-        root.AddChild(columns);
+        int localId    = PlayerManager.Instance?.LocalPlayerId ?? 1;
+        int opponentId = localId == 1 ? 2 : 1;
 
-        columns.AddChild(BuildColumn("UNITS", UnitDataDir, isBuilding: false));
-        columns.AddChild(BuildColumn("BUILDINGS", BuildingDataDir, isBuilding: true));
+        // One scroll box for the whole menu body so hovering + wheel scrolls the
+        // list (and the ScrollContainer consumes the wheel, so the camera won't zoom).
+        float maxHeight = GetViewportRect().Size.Y - 140f;
+        var scroll = new ScrollContainer
+        {
+            CustomMinimumSize    = new Vector2(0, maxHeight),
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+        };
+        root.AddChild(scroll);
+
+        var sections = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        scroll.AddChild(sections);
+
+        sections.AddChild(new Label { Text = "— YOURS —" });
+
+        var yours = new HBoxContainer();
+        yours.AddThemeConstantOverride("separation", 16);
+        sections.AddChild(yours);
+
+        yours.AddChild(BuildColumn("UNITS", UnitDataDir, PlaceableKind.Unit, localId));
+        yours.AddChild(BuildColumn("BUILDINGS", BuildingDataDir, PlaceableKind.Building, localId));
+        yours.AddChild(BuildColumn("CRYSTALS", CrystalSceneDir, PlaceableKind.Crystal, localId));
+
+        sections.AddChild(new HSeparator());
+        sections.AddChild(new Label { Text = "— OPPONENT —" });
+
+        var opponent = new HBoxContainer();
+        opponent.AddThemeConstantOverride("separation", 16);
+        sections.AddChild(opponent);
+
+        opponent.AddChild(BuildColumn("UNITS", UnitDataDir, PlaceableKind.Unit, opponentId));
+        opponent.AddChild(BuildColumn("BUILDINGS", BuildingDataDir, PlaceableKind.Building, opponentId));
     }
 
-    private Control BuildColumn(string header, string dir, bool isBuilding)
+    private Control BuildColumn(string header, string dir, PlaceableKind kind, int ownerId)
     {
-        var column = new VBoxContainer();
+        var column = new VBoxContainer { CustomMinimumSize = new Vector2(190, 0) };
         column.AddChild(new Label { Text = header });
-
-        var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(190, 440) };
-        column.AddChild(scroll);
 
         var list = new VBoxContainer();
         list.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        scroll.AddChild(list);
+        column.AddChild(list);
 
-        var entries = new List<(string Name, PackedScene Scene)>();
-        foreach (var path in GetTresFiles(dir))
+        var entries = new List<(string Name, PackedScene Scene, BuildingData Building)>();
+        string ext = kind == PlaceableKind.Crystal ? ".tscn" : ".tres";
+        foreach (var path in GetFiles(dir, ext))
         {
             string name;
             PackedScene scene;
-            if (isBuilding)
+            BuildingData building = null;
+            switch (kind)
             {
-                var data = GD.Load<BuildingData>(path);
-                if (data == null) continue;
-                name  = data.BuildingName;
-                scene = data.Scene;
+                case PlaceableKind.Building:
+                    building = GD.Load<BuildingData>(path);
+                    if (building == null) continue;
+                    name  = building.BuildingName;
+                    scene = building.Scene;
+                    break;
+                case PlaceableKind.Crystal:
+                    scene = GD.Load<PackedScene>(path);
+                    if (scene == null) continue;
+                    name  = path.GetFile().GetBaseName();
+                    break;
+                default:
+                    var data = GD.Load<UnitData>(path);
+                    if (data == null) continue;
+                    name  = data.UnitName;
+                    scene = data.Scene;
+                    break;
             }
-            else
-            {
-                var data = GD.Load<UnitData>(path);
-                if (data == null) continue;
-                name  = data.UnitName;
-                scene = data.Scene;
-            }
-            entries.Add((name, scene));
+            entries.Add((name, scene, building));
         }
 
         entries.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
-        foreach (var (name, scene) in entries)
+        foreach (var (name, scene, building) in entries)
         {
             var btn = new Button { Text = name };
-            btn.Pressed += () => OnEntryPressed(name, scene);
+            btn.Pressed += () => OnEntryPressed(name, scene, kind, building, ownerId);
             list.AddChild(btn);
         }
 
         return column;
     }
 
-    private void OnEntryPressed(string name, PackedScene scene)
+    private void OnEntryPressed(string name, PackedScene scene, PlaceableKind kind, BuildingData building, int ownerId)
     {
         SelectedName  = name;
         SelectedScene = scene;
-        _selectedLabel.Text = $"Selected: {name}";
-        GD.Print($"[PlacementTest] Selected '{name}' — placement not yet implemented.");
+        _selectedLabel.Text = $"Selected: {name} (P{ownerId})";
+        EventBus.RaisePlacementRequested(new PlacementRequest
+        {
+            Scene    = scene,
+            Kind     = kind,
+            Building = building,
+            OwnerId  = ownerId,
+        });
     }
 
-    private static List<string> GetTresFiles(string dir)
+    private static List<string> GetFiles(string dir, string ext)
     {
         var result = new List<string>();
         using var da = DirAccess.Open(dir);
@@ -128,7 +172,7 @@ public partial class PlacementTestPanel : Control
         for (string file = da.GetNext(); file != ""; file = da.GetNext())
         {
             if (da.CurrentIsDir()) continue;
-            if (file.EndsWith(".tres")) result.Add($"{dir}/{file}");
+            if (file.EndsWith(ext)) result.Add($"{dir}/{file}");
         }
         da.ListDirEnd();
         return result;

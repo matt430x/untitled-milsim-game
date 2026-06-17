@@ -14,4 +14,5 @@ RequiresCommandCenter = false
 Damage = 15.0
 AttackRange = 10.0
 AttackCooldown = 0.6
+RequiresCrystal = true
 Scene = ExtResource("2_scene")

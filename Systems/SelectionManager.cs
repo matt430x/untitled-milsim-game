@@ -68,6 +68,7 @@ public partial class SelectionManager : Control
         {
             if (key.Keycode == Key.F) SelectAllInView();
             if (key.Keycode == Key.C) DeselectAll();
+            if (key.Keycode == Key.P) SellSelected();
         }
     }
 
@@ -87,6 +88,8 @@ public partial class SelectionManager : Control
 
     private void HandleMouseButton(InputEventMouseButton mouse)
     {
+        if (PlacementController.IsPlacing) return;
+
         bool    shift     = mouse.ShiftPressed;
         bool    ctrl      = mouse.CtrlPressed;
         Vector2 screenPos = mouse.Position;
@@ -122,7 +125,7 @@ public partial class SelectionManager : Control
 
     private void HandleSingleClick(Vector2 screenPos, bool additive)
     {
-        ISelectable hit = GetSelectableAt(screenPos);
+        ISelectable hit = GetSelectableAt(screenPos, friendlyOnly: !TestMode.Enabled);
 
         if (!additive) ClearSelection();
 
@@ -146,7 +149,7 @@ public partial class SelectionManager : Control
 
         foreach (var selectable in SelectionRegistry.All)
         {
-            if (!IsFriendly(selectable)) continue;
+            if (!CanSelect(selectable)) continue;
             if (selectable is not Node3D node) continue;
             if (IsBehindCamera(cam,node.GlobalPosition)) continue;
             if (screenBox.HasPoint(cam.UnprojectPosition(node.GlobalPosition)))
@@ -185,7 +188,7 @@ public partial class SelectionManager : Control
         ClearSelection();
         foreach (var selectable in SelectionRegistry.All)
         {
-            if (!IsFriendly(selectable)) continue;
+            if (!CanSelect(selectable)) continue;
             if (selectable is not Node3D node) continue;
             if (IsBehindCamera(cam,node.GlobalPosition)) continue;
             if (screen.HasPoint(cam.UnprojectPosition(node.GlobalPosition)))
@@ -197,6 +200,24 @@ public partial class SelectionManager : Control
     private void DeselectAll()
     {
         ClearSelection();
+        EventBus.RaiseSelectionChanged(new List<int>());
+    }
+
+    /// Sells (removes) everything selected. In the real game only your own entities
+    /// can ever be selected, so this only sells your own. In the test world enemies
+    /// are selectable too, so P removes anything selected. The friendly guard keeps
+    /// the real game safe even if a hostile somehow ends up selected.
+    private void SellSelected()
+    {
+        if (_selected.Count == 0) return;
+
+        foreach (var s in _selected)
+        {
+            if (!CanSelect(s)) continue;
+            if (s is Node node) node.QueueFree();
+        }
+
+        _selected.Clear();
         EventBus.RaiseSelectionChanged(new List<int>());
     }
 
@@ -425,6 +446,10 @@ public partial class SelectionManager : Control
 
     private static bool IsFriendly(ISelectable s) =>
         !PlayerManager.Instance.AreHostile(s.OwnerId, PlayerManager.Instance.LocalPlayerId);
+
+    /// What the local player is allowed to select: only friendlies in the real game,
+    /// anything in the test world.
+    private static bool CanSelect(ISelectable s) => TestMode.Enabled || IsFriendly(s);
 
     private void AddToSelection(ISelectable s)
     {

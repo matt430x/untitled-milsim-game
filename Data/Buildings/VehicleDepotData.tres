@@ -10,4 +10,5 @@ BuildingType = 5
 MaxHealth = 1000.0
 Cost = 350
 BuildTime = 20.0
+RequiresCrystal = true
 Scene = ExtResource("2_scene")

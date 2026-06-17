@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Entities/Crystals/CrystalNode.cs" id="1_crystal"]
+
+[node name="Crystal" type="Node3D"]
+script = ExtResource("1_crystal")
