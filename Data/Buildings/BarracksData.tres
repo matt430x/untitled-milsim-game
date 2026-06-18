@@ -1,7 +1,14 @@
-[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="BuildingData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://Data/BuildingData.cs" id="1_data"]
 [ext_resource type="PackedScene" path="res://Scenes/Buildings/Barracks.tscn" id="2_scene"]
+[ext_resource type="Resource" path="res://Data/Units/RiflemanData.tres" id="3_rifleman"]
+[ext_resource type="Resource" path="res://Data/Units/MachineGunnerData.tres" id="4_mg"]
+[ext_resource type="Resource" path="res://Data/Units/SniperData.tres" id="5_sniper"]
+[ext_resource type="Resource" path="res://Data/Units/RPGSoldierData.tres" id="6_rpg"]
+[ext_resource type="Resource" path="res://Data/Units/EngineerData.tres" id="7_eng"]
+[ext_resource type="Resource" path="res://Data/Units/MedicData.tres" id="8_medic"]
+[ext_resource type="Resource" path="res://Data/Units/BuilderData.tres" id="9_builder"]
 
 [resource]
 script = ExtResource("1_data")
@@ -12,3 +19,4 @@ Cost = 200
 BuildTime = 15.0
 RequiresCrystal = true
 Scene = ExtResource("2_scene")
+ProducibleUnits = Array[Resource]([ExtResource("3_rifleman"), ExtResource("4_mg"), ExtResource("5_sniper"), ExtResource("6_rpg"), ExtResource("7_eng"), ExtResource("8_medic"), ExtResource("9_builder")])

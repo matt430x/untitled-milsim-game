@@ -19,4 +19,5 @@ public partial class BuildingData : Resource
     [Export] public float AttackRange { get; set; }
     [Export] public float AttackCooldown { get; set; }
     [Export] public PackedScene Scene { get; set; }
+    [Export] public Godot.Collections.Array<UnitData> ProducibleUnits { get; set; } = new();
 }

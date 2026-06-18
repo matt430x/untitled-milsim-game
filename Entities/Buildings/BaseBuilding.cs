@@ -58,7 +58,9 @@ public partial class BaseBuilding : StaticBody3D, IDamageable, ISelectable
     public void Select()   => _selection.Select();
     public void Deselect() => _selection.Deselect();
 
-    public void QueueUnit(UnitData unitData) => _production?.QueueProduction(unitData);
+    public bool CanProduce => _production != null && Data?.ProducibleUnits?.Count > 0;
+
+    public bool QueueUnit(UnitData unitData) => _production?.QueueProduction(unitData) ?? false;
 
     protected virtual void ApplyData(BuildingData data)
     {

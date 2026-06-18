@@ -5,6 +5,6 @@ namespace MilSim.Core.Interfaces;
 public interface IProducer
 {
     bool IsProducing { get; }
-    void QueueProduction(UnitData unitData);
+    bool QueueProduction(UnitData unitData);
     void CancelProduction();
 }

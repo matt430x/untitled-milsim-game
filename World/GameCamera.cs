@@ -8,7 +8,8 @@ namespace MilSim.World;
 /// </summary>
 public partial class GameCamera : Camera3D
 {
-    [Export] public float PanSpeed    { get; set; } = 15f;
+    [Export] public float PanSpeed      { get; set; } = 15f;
+    [Export] public float ShiftMultiplier { get; set; } = 3f;
     [Export] public float ZoomStep    { get; set; } = 0.15f;
     [Export] public float MinZoom     { get; set; } = 0.25f;
     [Export] public float MaxZoom     { get; set; } = 3.0f;
@@ -94,7 +95,8 @@ public partial class GameCamera : Camera3D
 
         if (dir == Vector3.Zero) return;
 
-        float speed = PanSpeed * _zoom;
+        float shift = Input.IsKeyPressed(Key.Shift) ? ShiftMultiplier : 1f;
+        float speed = PanSpeed * _zoom * shift;
         _focus += dir.Normalized() * speed * delta;
         ApplyTransform();
     }

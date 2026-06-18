@@ -1,12 +1,14 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://World/GameCamera.cs" id="1"]
 [ext_resource type="Script" path="res://World/Baseplate.cs" id="2"]
 [ext_resource type="Script" path="res://Systems/EconomySystem.cs" id="3"]
+[ext_resource type="Script" path="res://Systems/GameBootstrap.cs" id="5_Bootstrap"]
 [ext_resource type="Script" path="res://Systems/SelectionManager.cs" id="4"]
 [ext_resource type="Script" path="res://UI/MinimapPanel.cs" id="6_Minimap"]
 [ext_resource type="Script" path="res://UI/PlacementTestPanel.cs" id="43_PlaceTest"]
 [ext_resource type="Script" path="res://Systems/PlacementController.cs" id="44_Place"]
+[ext_resource type="Script" path="res://UI/BuildingProductionPopup.cs" id="45_ProdPopup"]
 
 [node name="Game" type="Node3D"]
 
@@ -29,6 +31,9 @@ script = ExtResource("44_Place")
 
 [node name="Systems" type="Node" parent="."]
 
+[node name="GameBootstrap" type="Node" parent="Systems"]
+script = ExtResource("5_Bootstrap")
+
 [node name="EconomySystem" type="Node" parent="Systems"]
 script = ExtResource("3")
 
@@ -42,3 +47,6 @@ script = ExtResource("6_Minimap")
 
 [node name="PlacementTestPanel" type="Control" parent="UI"]
 script = ExtResource("43_PlaceTest")
+
+[node name="BuildingProductionPopup" type="Control" parent="UI"]
+script = ExtResource("45_ProdPopup")

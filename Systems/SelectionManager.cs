@@ -1,6 +1,8 @@
 using MilSim.Autoloads;
 using MilSim.Core.Orders;
+using MilSim.Entities.Buildings;
 using MilSim.Entities.Units;
+using MilSim.UI;
 
 namespace MilSim.Systems;
 
@@ -28,6 +30,7 @@ public partial class SelectionManager : Control
     private const float IndicatorDuration = 0.6f;
 
     private BaseUnit _hovered;
+    private BuildingProductionPopup _productionPopup;
 
     // Gunfire tracers (world-space line, fades out quickly)
     private readonly List<(Vector3 From, Vector3 To, float Timer)> _tracers = new();
@@ -40,6 +43,7 @@ public partial class SelectionManager : Control
         SetAnchorsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
         EventBus.OnUnitFired += HandleUnitFired;
+        _productionPopup = GetParent().GetNodeOrNull<BuildingProductionPopup>("BuildingProductionPopup");
     }
 
     public override void _ExitTree()
@@ -161,6 +165,15 @@ public partial class SelectionManager : Control
 
     private void HandleRightClick(Vector2 screenPos, bool addWaypoint)
     {
+        // Right-clicking a friendly building that can produce units opens the menu.
+        ISelectable hit = GetSelectableAt(screenPos, friendlyOnly: true);
+        if (hit is BaseBuilding building && building.CanProduce)
+        {
+            _productionPopup?.OpenFor(building, screenPos);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         if (_selected.Count == 0) return;
 
         Vector3? groundPos = ScreenToGround(screenPos);
