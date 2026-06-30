@@ -82,7 +82,7 @@ public partial class ProductionComponent : Node, IProducer
         var unit = data.Scene.Instantiate<BaseUnit>();
         unit.Data = data;
         unit.GetNode<SelectionComponent>("SelectionComponent").OwnerId = OwnerId;
-        unit.GlobalPosition = building.GlobalPosition + new Vector3(2f, 0f, 0f);
         GetTree().Root.GetNode<Node3D>("Game/World/Units").AddChild(unit);
+        unit.GlobalPosition = building.GlobalPosition + new Vector3(2f, 0f, 0f);
     }
 }

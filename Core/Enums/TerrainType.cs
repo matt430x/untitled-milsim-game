@@ -5,6 +5,8 @@ public enum TerrainType
     Plains,
     Forest,
     Mountain,
+    Snow,
+    Beach,
     River,
     Water,
     Road

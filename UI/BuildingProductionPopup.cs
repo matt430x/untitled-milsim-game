@@ -104,8 +104,13 @@ public partial class BuildingProductionPopup : Control
         root.AddThemeConstantOverride("separation", 6);
         margin.AddChild(root);
 
-        _title = new Label { Text = "Production" };
-        root.AddChild(_title);
+        var header = new HBoxContainer();
+        _title = new Label { Text = "Production", SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        header.AddChild(_title);
+        var closeBtn = new Button { Text = "X" };
+        closeBtn.Pressed += Close;
+        header.AddChild(closeBtn);
+        root.AddChild(header);
 
         root.AddChild(new HSeparator());
 

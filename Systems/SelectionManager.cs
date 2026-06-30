@@ -3,6 +3,7 @@ using MilSim.Core.Orders;
 using MilSim.Entities.Buildings;
 using MilSim.Entities.Units;
 using MilSim.UI;
+using MilSim.World;
 
 namespace MilSim.Systems;
 
@@ -165,6 +166,14 @@ public partial class SelectionManager : Control
 
     private void HandleRightClick(Vector2 screenPos, bool addWaypoint)
     {
+        // Any right-click while the popup is open should close it.
+        if (_productionPopup?.Visible == true)
+        {
+            _productionPopup.Close();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         // Right-clicking a friendly building that can produce units opens the menu.
         ISelectable hit = GetSelectableAt(screenPos, friendlyOnly: true);
         if (hit is BaseBuilding building && building.CanProduce)
@@ -178,6 +187,10 @@ public partial class SelectionManager : Control
 
         Vector3? groundPos = ScreenToGround(screenPos);
         if (groundPos == null) return;
+
+        // Reject move orders targeting water tiles.
+        int tx = (int)groundPos.Value.X, tz = (int)groundPos.Value.Z;
+        if (MapData.InBounds(tx, tz) && MapData.IsWater(tx, tz)) return;
 
         var order = new MoveOrder(groundPos.Value);
 
@@ -463,6 +476,13 @@ public partial class SelectionManager : Control
     /// What the local player is allowed to select: only friendlies in the real game,
     /// anything in the test world.
     private static bool CanSelect(ISelectable s) => TestMode.Enabled || IsFriendly(s);
+
+    public void DeselectEntity(ISelectable s)
+    {
+        if (!_selected.Contains(s)) return;
+        RemoveFromSelection(s);
+        EventBus.RaiseSelectionChanged(GetSelectedIds());
+    }
 
     private void AddToSelection(ISelectable s)
     {

@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://World/GameCamera.cs" id="1"]
 [ext_resource type="Script" path="res://World/Baseplate.cs" id="2"]
@@ -9,6 +9,9 @@
 [ext_resource type="Script" path="res://UI/PlacementTestPanel.cs" id="43_PlaceTest"]
 [ext_resource type="Script" path="res://Systems/PlacementController.cs" id="44_Place"]
 [ext_resource type="Script" path="res://UI/BuildingProductionPopup.cs" id="45_ProdPopup"]
+[ext_resource type="Script" path="res://UI/MoneyDisplay.cs" id="46_Money"]
+[ext_resource type="Script" path="res://UI/SelectionPanel.cs" id="47_SelPanel"]
+[ext_resource type="Script" path="res://UI/GameOverScreen.cs" id="48_GameOver"]
 
 [node name="Game" type="Node3D"]
 
@@ -50,3 +53,12 @@ script = ExtResource("43_PlaceTest")
 
 [node name="BuildingProductionPopup" type="Control" parent="UI"]
 script = ExtResource("45_ProdPopup")
+
+[node name="MoneyDisplay" type="Label" parent="UI"]
+script = ExtResource("46_Money")
+
+[node name="SelectionPanel" type="Control" parent="UI"]
+script = ExtResource("47_SelPanel")
+
+[node name="GameOverScreen" type="Control" parent="UI"]
+script = ExtResource("48_GameOver")

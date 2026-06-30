@@ -5,6 +5,7 @@ using MilSim.Entities.Crystals;
 using MilSim.Entities.Buildings.Visual;
 using MilSim.Entities.Units;
 using MilSim.Entities.Units.Components;
+using MilSim.World;
 
 namespace MilSim.Systems;
 
@@ -17,13 +18,13 @@ public partial class PlacementController : Node3D
 {
     public static bool IsPlacing { get; private set; }
 
-    private const float MapSize = 80f;
-
     private static readonly Color ValidColor   = new Color(0.20f, 0.90f, 0.25f, 0.6f);
     private static readonly Color InvalidColor = new Color(0.95f, 0.20f, 0.20f, 0.6f);
 
     private static readonly Vector3 DefaultBuildingSize = new Vector3(2f, 1.5f, 2f);
     private static readonly Vector3 CrystalSize         = new Vector3(1.2f, 2.2f, 1.2f);
+
+    private PlacementRequest _lastRequest;
 
     private PackedScene   _scene;
     private PlaceableKind _kind;
@@ -68,7 +69,7 @@ public partial class PlacementController : Node3D
         {
             if (mb.ButtonIndex == MouseButton.Left)
             {
-                if (_isValid) { Place(); Cancel(); }
+                if (_isValid) { Place(); if (TestMode.Enabled) OnPlacementRequested(_lastRequest); else Cancel(); }
                 GetViewport().SetInputAsHandled();
             }
             else if (mb.ButtonIndex == MouseButton.Right)
@@ -88,6 +89,7 @@ public partial class PlacementController : Node3D
 
     private void OnPlacementRequested(PlacementRequest request)
     {
+        _lastRequest = request;
         Cancel();
         if (request.Scene == null) return;
 
@@ -154,22 +156,22 @@ public partial class PlacementController : Node3D
         {
             case PlaceableKind.Building:
                 var building = _scene.Instantiate<BaseBuilding>();
-                building.Data           = _buildingData;
-                building.OwnerId        = ownerId;
-                building.GlobalPosition = _ghostPos;
+                building.Data    = _buildingData;
+                building.OwnerId = ownerId;
                 GetTree().Root.GetNode<Node3D>("Game/World/Buildings").AddChild(building);
+                building.GlobalPosition = _ghostPos;
                 break;
             case PlaceableKind.Crystal:
                 var crystal = _scene.Instantiate<Node3D>();
-                crystal.GlobalPosition = _ghostPos;
                 GetTree().Root.GetNode<Node3D>("Game/World/Crystals").AddChild(crystal);
+                crystal.GlobalPosition = _ghostPos;
                 break;
             default:
                 var unit = _scene.Instantiate<BaseUnit>();
                 unit.Data = _unitData;
                 unit.GetNode<SelectionComponent>("SelectionComponent").OwnerId = ownerId;
-                unit.GlobalPosition = _ghostPos;
                 GetTree().Root.GetNode<Node3D>("Game/World/Units").AddChild(unit);
+                unit.GlobalPosition = _ghostPos;
                 break;
         }
     }
@@ -199,8 +201,8 @@ public partial class PlacementController : Node3D
     {
         float hx = _footprint.X * 0.5f;
         float hz = _footprint.Y * 0.5f;
-        return pos.X - hx >= 0f && pos.X + hx <= MapSize
-            && pos.Z - hz >= 0f && pos.Z + hz <= MapSize;
+        return pos.X - hx >= 0f && pos.X + hx <= MapData.WorldWidth
+            && pos.Z - hz >= 0f && pos.Z + hz <= MapData.WorldHeight;
     }
 
     private bool OverlapsAnyBuilding(Vector3 pos)

@@ -2,11 +2,6 @@ using MilSim.Systems;
 
 namespace MilSim.Entities.Crystals;
 
-/// <summary>
-/// Resource crystal and build-zone anchor. Buildings flagged RequiresCrystal can
-/// only be placed within BuildRadius of a crystal. A flat ring on the ground shows
-/// the buildable area.
-/// </summary>
 public partial class CrystalNode : Node3D
 {
     [Export] public float       BuildRadius { get; set; } = 10f;
@@ -23,17 +18,19 @@ public partial class CrystalNode : Node3D
 
     private void BuildCrystalMesh()
     {
+        bool isSuper = Type == CrystalType.Super;
+
         var mesh = new MeshInstance3D();
-        var box  = new BoxMesh { Size = new Vector3(1.2f, 2.2f, 1.2f) };
+        var box  = new BoxMesh { Size = isSuper ? new Vector3(2f, 4f, 2f) : new Vector3(1.2f, 2.2f, 1.2f) };
         box.Material = new StandardMaterial3D
         {
-            AlbedoColor              = new Color(0.3f, 0.85f, 0.95f),
+            AlbedoColor              = isSuper ? new Color(1.0f, 0.78f, 0.1f) : new Color(0.3f, 0.85f, 0.95f),
             EmissionEnabled          = true,
-            Emission                 = new Color(0.2f, 0.7f, 0.9f),
-            EmissionEnergyMultiplier = 0.5f,
+            Emission                 = isSuper ? new Color(0.9f, 0.55f, 0f)   : new Color(0.2f, 0.7f, 0.9f),
+            EmissionEnergyMultiplier = isSuper ? 1.5f : 0.5f,
         };
         mesh.Mesh     = box;
-        mesh.Position = new Vector3(0f, 1.1f, 0f);
+        mesh.Position = new Vector3(0f, isSuper ? 2f : 1.1f, 0f);
         AddChild(mesh);
     }
 
@@ -49,9 +46,11 @@ public partial class CrystalNode : Node3D
         };
         torus.Material = new StandardMaterial3D
         {
-            AlbedoColor    = new Color(0.3f, 0.85f, 0.95f, 0.5f),
-            Transparency   = BaseMaterial3D.TransparencyEnum.Alpha,
-            ShadingMode    = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            AlbedoColor  = Type == CrystalType.Super
+                ? new Color(1.0f, 0.78f, 0.1f, 0.5f)
+                : new Color(0.3f, 0.85f, 0.95f, 0.5f),
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            ShadingMode  = BaseMaterial3D.ShadingModeEnum.Unshaded,
         };
         ring.Mesh     = torus;
         ring.Position = new Vector3(0f, 0.05f, 0f);

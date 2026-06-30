@@ -1,3 +1,4 @@
+using MilSim.Autoloads;
 using MilSim.Systems;
 
 namespace MilSim.UI;
@@ -34,9 +35,10 @@ public partial class MainMenu : Control
         };
         column.AddChild(title);
 
-        column.AddChild(MakeButton("Start Game",  () => Launch(testMode: false)));
-        column.AddChild(MakeButton("Test Realm",  () => Launch(testMode: true)));
-        column.AddChild(MakeButton("Quit",        () => GetTree().Quit()));
+        column.AddChild(MakeButton("Singleplayer", () => GetTree().ChangeSceneToFile("res://Scenes/SingleplayerMenu.tscn")));
+        column.AddChild(MakeButton("Multiplayer",  () => { }));
+        column.AddChild(MakeButton("Test Realm",   () => Launch(testMode: true)));
+        column.AddChild(MakeButton("Exit",         () => GetTree().Quit()));
     }
 
     private Button MakeButton(string text, Action onPressed)
@@ -49,6 +51,8 @@ public partial class MainMenu : Control
     private void Launch(bool testMode)
     {
         TestMode.Enabled = testMode;
+        if (!testMode)
+            GameManager.Instance?.StartMatch(new GameSettings());
         GetTree().ChangeSceneToFile(GameScene);
     }
 }

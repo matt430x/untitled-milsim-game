@@ -12,6 +12,17 @@ public partial class GameManager : Node
     public override void _Ready()
     {
         Instance = this;
+        EventBus.OnHqDestroyed += OnHqDestroyed;
+    }
+
+    public override void _ExitTree()
+    {
+        EventBus.OnHqDestroyed -= OnHqDestroyed;
+    }
+
+    private void OnHqDestroyed(int playerId)
+    {
+        PlayerManager.Instance?.EliminatePlayer(playerId);
     }
 
     public void StartMatch(GameSettings settings)

@@ -15,6 +15,7 @@ public static class EventBus
     public static event Action<GameState> OnGameStateChanged;
     public static event Action OnMatchStarted;
     public static event Action<int> OnMatchEnded; // winning teamId
+    public static event Action OnMapGenerated;
 
     // --- Economy ---
     public static event Action<int, float> OnMoneyChanged; // playerId, newAmount
@@ -55,6 +56,7 @@ public static class EventBus
     public static void RaiseGameStateChanged(GameState state)                          => OnGameStateChanged?.Invoke(state);
     public static void RaiseMatchStarted()                                             => OnMatchStarted?.Invoke();
     public static void RaiseMatchEnded(int winnerTeamId)                               => OnMatchEnded?.Invoke(winnerTeamId);
+    public static void RaiseMapGenerated()                                             => OnMapGenerated?.Invoke();
 
     public static void RaiseMoneyChanged(int playerId, float newAmount)                => OnMoneyChanged?.Invoke(playerId, newAmount);
     public static void RaiseIncomeSourceAdded(IIncomeSource source)                    => OnIncomeSourceAdded?.Invoke(source);
